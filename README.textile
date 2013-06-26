@@ -6,7 +6,7 @@ The Swagger project itself consists of the Swagger Specification and some implem
 
 Swaggerkit is an alternative implementation that has no dependencies on JaxRS, or any other technology for that matter (except for Scala...). It is basically an set of case classes that form the data structures as described in the Swagger Specification.
 
-From these case classes, the JSON must be generated. This project currently contains an implementation that uses the Play 2.0 JSON library for that. 
+From these case classes, the JSON must be generated. This project currently contains an implementation for Play 2.0 JSON and for spray-json.
 
 h2. Versions
 
