@@ -1,7 +1,6 @@
 package net.eamelink.swaggerkit.play2
 
 import net.eamelink.swaggerkit._
-import net.eamelink.swaggerkit.SimpleTypes._
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import play.api.libs.json._
@@ -41,7 +40,7 @@ trait SampleApiDocumentation extends Scope with SchemaBuilder {
   lazy val apiDoc = ApiDocumentation(
     basePath = "http://api.example.com/",
     swaggerVersion = "1.1-SNAPSHOT",
-    apiVersion = "1",
+    apiVersion = "1.1",
     apis = List(ResourceDeclaration(
       path = "/albums.{format}",
       description = "Operations on Albums",
@@ -57,14 +56,14 @@ trait SampleApiDocumentation extends Scope with SchemaBuilder {
   lazy val albumApi = Api("/album/{albumId}") describedBy "An album API" withOperations (showAlbum, updateAlbum, deleteAlbum)
 
   lazy val listAlbums = Operation("listAlbums", GET, "List albums") takes (
-    QueryParam("query", String) is "Filter by name",
-    QueryParam("orderBy", String) is "The sort field. Defaults to 'id'" withValues ("id", "title")) // TODO: Maybe add sample data where this is populated by an Enumeration?
+    QueryParam("query", SimpleTypes.String) is "Filter by name",
+    QueryParam("orderBy", SimpleTypes.String) is "The sort field. Defaults to 'id'" withValues ("id", "title")) // TODO: Maybe add sample data where this is populated by an Enumeration?
 
   lazy val createAlbum = Operation("createAlbum", POST, "Create a new album") takes (
     BodyParam(albumSchema))
 
   lazy val showAlbum = Operation("showAlbum", GET, "Show an album") takes (
-    PathParam("albumId", String) is "The album id") note
+    PathParam("albumId", SimpleTypes.String) is "The album id") note
     "This is just a sample note"
 
   lazy val updateAlbum = Operation("updateAlbum", PUT, "Update an album") takes () // TODO
@@ -72,11 +71,11 @@ trait SampleApiDocumentation extends Scope with SchemaBuilder {
   lazy val deleteAlbum = Operation("deleteAlbum", DELETE, "Delete an album") takes () // TODO
 
   lazy val albumSchema = Schema("Album") has (
-    "id" -> Integer,
-    "title" -> String,
-    "photos" -> Array(photoSchema))
+    "id" -> SimpleTypes.Int,
+    "title" -> SimpleTypes.String,
+    "photos" -> ContainerTypes.Array(photoSchema))
 
   lazy val photoSchema = Schema("Photo") has (
-    "id" -> Integer,
-    "title" -> String)
+    "id" -> SimpleTypes.Int,
+    "title" -> SimpleTypes.String)
 }

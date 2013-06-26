@@ -13,7 +13,7 @@ import api.sorting.OrderDirection
 import org.joda.time.DateTime
 
 object Todos extends Controller {
-  val dateFormat = "yyyy-MM-dd hh:mm";
+  val dateFormat = "yyyy-MM-dd hh:mm"
 
   lazy val todosApi = Api("/todos") describedBy "A todos API" withOperations (listOperation, createOperation)
   lazy val todoApi = Api("/todos/{todoId}") describedBy "A todo API" withOperations (showOperation, updateOperation, deleteOperation)
@@ -89,9 +89,9 @@ object Todos extends Controller {
   lazy val deleteOperation = Operation("deleteTodo", DELETE, "Delete a todo item") takes (
     PathParam("todoId", String) is "The id of the todo to delete") note
     "This method returns a 204 when successful, a 404 when the todo item was not found."
-    
+
   def delete(todoId: Long) = Action {
-    Todo.findById(todoId).map{ todo => 
+    Todo.findById(todoId).map{ todo =>
       Todo.delete(todo.id)
       NoContent
     }.getOrElse(NotFound)

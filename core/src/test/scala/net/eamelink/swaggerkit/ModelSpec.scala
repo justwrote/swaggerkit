@@ -1,6 +1,7 @@
 package net.eamelink.swaggerkit
 
 import SimpleTypes._
+import ContainerTypes._
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 
@@ -9,7 +10,7 @@ class ModelSpec extends Specification {
   "The SchemaBuilder trait" should {
     "provide an implicit conversion from Type to Property" in {
       object t extends SchemaBuilder {
-        val p: Property = Number
+        val p: Property = Int
       }
       success
     }
@@ -17,15 +18,15 @@ class ModelSpec extends Specification {
 
   "A Type" should {
     "have a name" in {
-      val t: Type = Number
+      val t: Type = Int
       t.name
       success
     }
   }
 
   "SimpleTypes" should {
-    "contain all primitives from draft-zyp-json-schema-03" in {
-      val primitives: Seq[Type] = Seq(String, Number, Integer, Boolean, Object, Any)
+    "contain all primitives from https://github.com/wordnik/swagger-core/wiki/Datatypes#primitives" in {
+      val primitives: Seq[Type] = Seq(Byte, Boolean, Int, Long, Float, Double, String, Date)
       success
     }
 
@@ -45,26 +46,36 @@ class ModelSpec extends Specification {
       val p = Property(String) allows ("Mr", "Dr", "Mrs", "Prof")
       p.allowableValues must beSome
     }
+
+    "has a switch 'isRequired'" in new SampleParam {
+      val p = Property(String)
+      (p isRequired).required must_== true
+    }
+
+    "has a switch 'isOptional'" in new SampleParam {
+      val p = Property(String)
+      (p isOptional).required must_== false
+    }
   }
 
   "The HttpMethod trait" should {
-    "be extended by GET, POST, PUT and DELETE" in {
-      val methods: Seq[HttpMethod] = List(GET, POST, PUT, DELETE)
+    "be extended by GET, POST, PUT, PATCH and DELETE" in {
+      val methods: Seq[HttpMethod] = Seq(GET, POST, PUT, PATCH, DELETE)
       success
     }
   }
 
   "A Parameter" should {
     "have a factory QueryParam" in {
-      QueryParam("foo", Number).paramType must_== "query"
+      QueryParam("foo", Int).paramType must_== "query"
     }
 
     "have a factory PathParam" in {
-      PathParam("foo", Number).paramType must_== "path"
+      PathParam("foo", Int).paramType must_== "path"
     }
 
     "have a factory BodyParam" in {
-      BodyParam(Number).paramType must_== "body"
+      BodyParam(Int).paramType must_== "body"
     }
 
     "take a description with 'is'" in new SampleParam {
@@ -123,7 +134,7 @@ class ModelSpec extends Specification {
 }
 
 trait SampleParam extends Scope {
-  val param = QueryParam("foo", Number)
+  val param = QueryParam("foo", Int)
 }
 
 trait SampleOperation extends Scope {

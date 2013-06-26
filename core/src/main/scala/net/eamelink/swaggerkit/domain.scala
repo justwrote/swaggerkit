@@ -71,12 +71,15 @@ case class Operation(
   summary: String,
   parameters: List[Parameter] = Nil,
   notes: Option[String] = None,
-  responseTypeInternal: Option[String] = None,
+  errorResponses: List[Error] = Nil,
   responseClass: Option[String] = None) {
 
   def takes(params: Parameter*) = copy(parameters = params.toList)
   def note(note: String) = copy(notes = Some(note))
+  def errors(errors: Error*) = copy(errorResponses = errors.toList)
 }
+
+case class Error(code: Int, reason: String)
 
 /**
  * Http request parameter
@@ -128,47 +131,115 @@ sealed trait HttpMethod
 case object GET extends HttpMethod
 case object POST extends HttpMethod
 case object PUT extends HttpMethod
+case object PATCH extends HttpMethod
 case object DELETE extends HttpMethod
-
-/**
- * A description of a complex type.
- */
-case class Schema(name: String, properties: Option[Map[String, Property]] = None) extends Type {
-  def has(props: (String, Property)*) = copy(properties = Some(props.toMap))
-}
-
-/**
- * A property of a Schema.
- */
-case class Property(
-  typ: Type,
-  description: Option[String] = None,
-  allowableValues: Option[Seq[String]] = None) {
-
-  def is(description: String) = copy(description = Some(description))
-  def allows(vals: String*) = copy(allowableValues = Some(vals.toSeq))
-}
 
 /**
  * A property type from a 'model' in the Swagger output.
  *
- * This can be a Simple type, or a Schema. In Swagger, for a Schema just the name is outputted.
+ * This can be a primitive, complex or container type.
  */
-trait Type {
+sealed trait Type {
   def name: String
 }
 
+sealed trait SingleType extends Type
+
+sealed trait ComplexType extends SingleType {
+  def id: String
+  def name = id
+}
+sealed trait PrimitiveType extends SingleType
+
+sealed trait ContainerType extends Type {
+  def underlying: SingleType
+}
+
 /**
- * Predefined primitives, or "Simple Types" as the spec calls them
+ * A description of a complex type.
+ */
+case class Schema(id: String, properties: Option[Map[String, Property]] = None) extends ComplexType {
+  def has(props: (String, Property)*) = copy(properties = Some(props.toMap))
+}
+
+/**
+ * A property of a complex or container type.
+ */
+trait Property {
+  def typ: Type
+  def required: Boolean
+  def description: Option[String]
+  def allowableValues: Option[Seq[String]]
+
+  def is(description: String): Property
+  def allows(vals: String*): Property
+  def isRequired(): Property
+  def isOptional(): Property
+}
+
+private[swaggerkit] case class SingleTypeProperty(
+  typ: SingleType,
+  required: Boolean,
+  description: Option[String],
+  allowableValues: Option[Seq[String]]) extends Property {
+
+  def is(description: String) = copy(description = Some(description))
+  def allows(vals: String*) = copy(allowableValues = Some(vals.toSeq))
+  def isRequired() = copy(required = true)
+  def isOptional() = copy(required = false)
+}
+
+private[swaggerkit] case class ContainerItemsType(ref: String)
+private[swaggerkit] object ContainerTypeProperty {
+  def apply(
+    typ: ContainerType,
+    required: Boolean,
+    description: Option[String],
+    allowableValues: Option[Seq[String]]): ContainerTypeProperty =
+    ContainerTypeProperty(typ, required, description, allowableValues, ContainerItemsType(typ.underlying.name))
+}
+private[swaggerkit] case class ContainerTypeProperty(
+  typ: ContainerType,
+  required: Boolean,
+  description: Option[String],
+  allowableValues: Option[Seq[String]],
+  items: ContainerItemsType) extends Property {
+
+  def is(description: String) = copy(description = Some(description))
+  def allows(vals: String*) = copy(allowableValues = Some(vals.toSeq))
+  def isRequired() = copy(required = true)
+  def isOptional() = copy(required = false)
+}
+
+object Property {
+  def apply(typ: Type,
+    required: Boolean = false,
+    description: Option[String] = None,
+    allowableValues: Option[Seq[String]] = None): Property = typ match {
+    case t: SingleType => SingleTypeProperty(t, required, description, allowableValues)
+    case t: ContainerType => ContainerTypeProperty(t, required, description, allowableValues)
+  }
+}
+
+/**
+ * Predefined primitives
  *
- * @see http://tools.ietf.org/html/draft-zyp-json-schema-03 section 5.1
+ * https://github.com/wordnik/swagger-core/wiki/datatypes
  */
 object SimpleTypes {
-  object String extends Type { val name = "string" }
-  object Number extends Type { val name = "number" }
-  object Integer extends Type { val name = "integer" }
-  object Boolean extends Type { val name = "boolean" }
-  object Object extends Type { val name = "object" }
-  object Any extends Type { val name = "any" }
-  case class Array(innerType: Type) extends Type { def name = "Array[" + innerType.name + "]" }
+  object Void extends PrimitiveType { val name = "void" }
+  object Byte extends PrimitiveType { val name = "byte" }
+  object Boolean extends PrimitiveType { val name = "boolean" }
+  object Int extends PrimitiveType { val name = "int" }
+  object Long extends PrimitiveType { val name = "long" }
+  object Float extends PrimitiveType { val name = "float" }
+  object Double extends PrimitiveType { val name = "double" }
+  object String extends PrimitiveType { val name = "string" }
+  object Date extends PrimitiveType { val name = "Date" }
+}
+
+object ContainerTypes {
+  case class Array(underlying: SingleType) extends ContainerType { val name = "Array" }
+  case class List(underlying: SingleType) extends ContainerType { val name = "List" }
+  case class Set(underlying: SingleType) extends ContainerType { val name = "Set" }
 }

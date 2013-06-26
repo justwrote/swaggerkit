@@ -63,12 +63,18 @@ object Writers {
       "valueType" -> JsString("LIST")))
   }
 
+  object ErrorWriter extends Writes[Error] {
+    def writes(e: Error): JsValue = JsObject(List(
+      "code" -> JsNumber(e.code),
+      "reason" -> JsString(e.reason)))
+  }
+
   object OperationWriter extends Writes[Operation] {
     def writes(op: Operation): JsValue = JsObject(List(
       "parameters" -> JsArray(op.parameters.map(param => ParameterWriter.writes(param))),
       "httpMethod" -> JsString(op.httpMethod.toString),
       "notes" -> JsString(op.notes.getOrElse("")),
-      "responseTypeInternal" -> JsString(op.responseTypeInternal.getOrElse("")),
+      "errorResponses" -> JsArray(op.errorResponses.map(err => ErrorWriter.writes(err))),
       "nickname" -> JsString(op.nickName),
       "responseClass" -> JsString(op.responseClass.getOrElse("")),
       "summary" -> JsString(op.summary)))

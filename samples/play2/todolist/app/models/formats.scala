@@ -16,7 +16,7 @@ object formats {
       "done" -> JsBoolean(todo.done)))
 
     lazy val schema = Schema("Todo") has (
-      "id" -> Integer,
+      "id" -> Int,
       "text" -> String,
       "due" -> String,
       "done" -> Boolean)
