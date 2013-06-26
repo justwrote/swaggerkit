@@ -5,7 +5,7 @@ object Settings {
   val name = "swaggerkit"
 
   val buildSettings = Project.defaultSettings ++ Seq(
-    version := "0.2.1-SNAPSHOT",
+    version := "0.3.0-SNAPSHOT",
     scalaVersion := "2.10.0",
     organization := "net.eamelink",
     scalacOptions ++= Seq("-deprecation", "-feature")
