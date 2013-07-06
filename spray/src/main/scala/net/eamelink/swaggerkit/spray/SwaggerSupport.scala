@@ -74,6 +74,7 @@ trait HttpMethodProtocol  {
       case PUT => JsString("PUT")
       case DELETE => JsString("DELETE")
       case PATCH => JsString("PATCH")
+      case HEAD => JsString("HEAD")
     }
 
     def read(json: JsValue) = deserializationError("reading http method currently not supported")
